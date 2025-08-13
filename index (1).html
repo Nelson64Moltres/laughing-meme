@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Game Tebak Warna — Demo</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #0f1225; color: #fff; margin: 0; text-align: center; }
+  .container { max-width: 900px; margin: auto; padding: 20px; }
+  .card { background: #161a33; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+  button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+  input, select { padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; width: 80%; max-width: 300px; }
+  .hidden { display: none; }
+  .color-box { width: 50px; height: 50px; display: inline-block; margin: 10px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Login Section -->
+  <div id="loginSection" class="card">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <p>Belum punya akun? <a href="#" id="showSignUp">Daftar di sini</a></p>
+  </div>
+
+  <!-- Signup Section -->
+  <div id="signupSection" class="card hidden">
+    <h2>Sign Up</h2>
+    <input type="text" id="signupUsername" placeholder="Username">
+    <input type="password" id="signupPassword" placeholder="Password">
+    <button id="signupBtn">Daftar</button>
+    <p>Sudah punya akun? <a href="#" id="showLogin">Login di sini</a></p>
+  </div>
+
+  <!-- Menu Utama -->
+  <div id="menuSection" class="card hidden">
+    <h2>Selamat datang, <span id="userDisplay"></span></h2>
+    <p>Saldo: <span id="saldo">0</span> koin</p>
+    <button onclick="showTopup()">Isi Saldo</button>
+    <button onclick="showGame()">Main Tebak Warna</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Isi Saldo -->
+  <div id="topupSection" class="card hidden">
+    <h2>Isi Saldo</h2>
+    <select id="topupAmount">
+      <option value="500000">500.000</option>
+      <option value="1000000">1.000.000</option>
+      <option value="2000000">2.000.000</option>
+      <option value="10000000">10.000.000</option>
+    </select>
+    <br>
+    <button onclick="topup()">Tambah Saldo</button>
+    <br><br>
+    <button onclick="backMenu()">Kembali</button>
+  </div>
+
+  <!-- Game Tebak Warna -->
+  <div id="gameSection" class="card hidden">
+    <h2>Tebak Warna</h2>
+    <p>Pilih warna:</p>
+    <select id="chosenColor">
+      <option value="Merah">Merah</option>
+      <option value="Hijau">Hijau</option>
+      <option value="Biru">Biru</option>
+    </select>
+    <br><br>
+    <input id="bet" type="number" placeholder="Jumlah taruhan">
+    <br>
+    <button onclick="play()">Mainkan</button>
+    <p id="result"></p>
+    <div id="colorResult"></div>
+    <br>
+    <button onclick="backMenu()">Kembali</button>
+  </div>
+</div>
+
+<script>
+let balance = 0;
+
+// Event Login
+document.getElementById('loginBtn').onclick = function() {
+  let user = document.getElementById('loginUsername').value;
+  let pass = document.getElementById('loginPassword').value;
+  let storedUser = localStorage.getItem('user_'+user);
+  if (storedUser && JSON.parse(storedUser).password === pass) {
+    localStorage.setItem('currentUser', user);
+    startMenu(user);
+  } else {
+    alert('Username atau password salah');
+  }
+};
+
+// Event Signup
+document.getElementById('signupBtn').onclick = function() {
+  let user = document.getElementById('signupUsername').value;
+  let pass = document.getElementById('signupPassword').value;
+  if (!user || !pass) return alert('Lengkapi semua field');
+  if (localStorage.getItem('user_'+user)) return alert('Username sudah terdaftar');
+  localStorage.setItem('user_'+user, JSON.stringify({ password: pass, balance: 0 }));
+  alert('Pendaftaran berhasil, silakan login');
+  showLogin();
+};
+
+document.getElementById('showSignUp').onclick = showSignUp;
+document.getElementById('showLogin').onclick = showLogin;
+
+function showSignUp() {
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('signupSection').classList.remove('hidden');
+}
+
+function showLogin() {
+  document.getElementById('signupSection').classList.add('hidden');
+  document.getElementById('loginSection').classList.remove('hidden');
+}
+
+function startMenu(user) {
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('signupSection').classList.add('hidden');
+  document.getElementById('menuSection').classList.remove('hidden');
+  document.getElementById('userDisplay').textContent = user;
+  balance = JSON.parse(localStorage.getItem('user_'+user)).balance;
+  updateSaldo();
+}
+
+function updateSaldo() {
+  document.getElementById('saldo').textContent = balance.toLocaleString('id-ID');
+  let user = localStorage.getItem('currentUser');
+  if (user) {
+    let data = JSON.parse(localStorage.getItem('user_'+user));
+    data.balance = balance;
+    localStorage.setItem('user_'+user, JSON.stringify(data));
+  }
+}
+
+function showTopup() {
+  document.getElementById('menuSection').classList.add('hidden');
+  document.getElementById('topupSection').classList.remove('hidden');
+}
+
+function showGame() {
+  document.getElementById('menuSection').classList.add('hidden');
+  document.getElementById('gameSection').classList.remove('hidden');
+}
+
+function backMenu() {
+  document.getElementById('topupSection').classList.add('hidden');
+  document.getElementById('gameSection').classList.add('hidden');
+  document.getElementById('menuSection').classList.remove('hidden');
+}
+
+function topup() {
+  let amount = parseInt(document.getElementById('topupAmount').value);
+  balance += amount;
+  updateSaldo();
+  alert('Saldo berhasil ditambah');
+}
+
+function play() {
+  let bet = parseInt(document.getElementById('bet').value);
+  if (bet > balance || bet <= 0) return alert('Taruhan tidak valid');
+  let colors = ["Merah", "Hijau", "Biru"];
+  let randomColor = colors[Math.floor(Math.random() * colors.length)];
+  let chosen = document.getElementById('chosenColor').value;
+
+  document.getElementById('colorResult').innerHTML = `<div class='color-box' style='background:${randomColor.toLowerCase()}'></div>`;
+
+  if (chosen === randomColor) {
+    balance += bet;
+    document.getElementById('result').textContent = `MENANG! +${bet} koin`;
+  } else {
+    balance -= bet;
+    document.getElementById('result').textContent = `KALAH! -${bet} koin`;
+  }
+  updateSaldo();
+}
+
+function logout() {
+  localStorage.removeItem('currentUser');
+  location.reload();
+}
+
+let currentUser = localStorage.getItem('currentUser');
+if (currentUser) startMenu(currentUser);
+</script>
+</body>
+</html>
